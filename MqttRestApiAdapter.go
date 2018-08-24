@@ -105,7 +105,6 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("MQTT client is subcribed to '%s' topic with '%d' qos\n", mqttTopic, mqttQos)
-	
 	// receive MQTT message and call REST API for each changes
 	for true {
 		//receive REST API
