@@ -58,6 +58,21 @@ func useGETMethod() string{
 		return gateway.GatewayStatus
 	}
 
+func checkMessage(message string, mqttClient MQTT.Client ){
+	if message != state {
+				fmt.Printf("RECEIVED API Message: %s \n", message)
+				if message == "off" {
+					token := mqttClient.Publish(mqttTopic, mqttQos, false, "0")
+					token.Wait()
+					state = message
+				} else if message == "on" {
+					token := mqttClient.Publish(mqttTopic, mqttQos, false, "1")
+					token.Wait()
+					state = message
+				}
+			}
+}
+
 func usePOSTMethod() {
 				req, err := http.NewRequest(restApiMethodPost, restApiUrlPost, strings.NewReader(restApiBody))
 				if err != nil {
@@ -76,6 +91,17 @@ func usePOSTMethod() {
 				}
 				fmt.Println(string(body))
 				resp.Body.Close()
+}
+
+func subscribeMessage(topic string, message string){
+				fmt.Printf("RECEIVED TOPIC: %s MESSAGE: %s\n", topic, message)
+				if message == "0" {
+					restApiBody = "{\"gateway_status\": \"off\"}"
+					state = "off"
+				} else if message == "1" {
+					restApiBody = "{\"gateway_status\": \"on\"}"
+					state = "on"
+				} 
 }
 
 func main() {
@@ -104,37 +130,17 @@ func main() {
 		fmt.Println(token.Error())
 		os.Exit(1)
 	}
+	
 	fmt.Printf("MQTT client is subcribed to '%s' topic with '%d' qos\n", mqttTopic, mqttQos)
 	// receive MQTT message and call REST API for each changes
 	for true {
 		//receive REST API
 		message := useGETMethod()
-		if message != state {
-			fmt.Printf("RECEIVED API Message: %s \n", message)
-			if message == "off" {
-				token := mqttClient.Publish(mqttTopic, mqttQos, false, "0")
-				token.Wait()
-				state = message
-			} else if message == "on" {
-				token := mqttClient.Publish(mqttTopic, mqttQos, false, "1")
-				token.Wait()
-				state = message
-			}
-		}
-
+		checkMessage(message, mqttClient)
 		// receive MQTT message
 		select {
 			case incoming := <-choke:
-				fmt.Printf("RECEIVED TOPIC: %s MESSAGE: %s\n", incoming[0], incoming[1])
-				if incoming[1] == "0" {
-					restApiBody = "{\"gateway_status\": \"off\"}"
-					state = "off"
-				} else if incoming[1] == "1" {
-					restApiBody = "{\"gateway_status\": \"on\"}"
-					state = "on"
-				} else {
-					continue
-				}
+				subscribeMessage(incoming[0],incoming[1])
 				usePOSTMethod()
 			default:
 				continue
