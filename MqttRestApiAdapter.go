@@ -73,7 +73,7 @@ func checkMessage(message string, mqttClient MQTT.Client ){
 			}
 }
 
-func usePOSTMethod() {
+func usePOSTMethod() string{
 				req, err := http.NewRequest(restApiMethodPost, restApiUrlPost, strings.NewReader(restApiBody))
 				if err != nil {
 					panic(err)
@@ -89,8 +89,8 @@ func usePOSTMethod() {
 				if 200 != resp.StatusCode {
 					panic(body)
 				}
-				fmt.Println(string(body))
 				resp.Body.Close()
+				return string(body)
 }
 
 func subscribeMessage(topic string, message string){
@@ -141,7 +141,8 @@ func main() {
 		select {
 			case incoming := <-choke:
 				subscribeMessage(incoming[0],incoming[1])
-				usePOSTMethod()
+				value := usePOSTMethod()
+				print(value + "\n")
 			default:
 				continue
 		}
