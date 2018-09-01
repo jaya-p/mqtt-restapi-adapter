@@ -30,6 +30,8 @@ import (
 
 	var httpClient = http.Client{}
 
+	var opts = MQTT.NewClientOptions().AddBroker(mqttBrokerUrl)
+	var mqttClient = MQTT.NewClient(opts)
 
 
 type Gateway struct {
@@ -106,7 +108,7 @@ func subscribeMessage(topic string, message string){
 
 func main() {
 	// set MQTT client variable
-	opts := MQTT.NewClientOptions().AddBroker(mqttBrokerUrl)
+	opts = MQTT.NewClientOptions().AddBroker(mqttBrokerUrl)
 	opts.SetClientID(mqttClientId)
 
 	// subscribe to a topic
@@ -115,7 +117,7 @@ func main() {
 		choke <- [2]string{msg.Topic(), string(msg.Payload())}
 	})
 
-	mqttClient := MQTT.NewClient(opts)
+	mqttClient = MQTT.NewClient(opts)
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
@@ -137,6 +139,22 @@ func main() {
 		//receive REST API
 		message := useGETMethod()
 		checkMessage(message, mqttClient)
+
+
+		// if message != state {
+		// 			fmt.Printf("RECEIVED API Message: %s \n", message)
+		// 			if message == "off" {
+		// 				token := mqttClient.Publish(mqttTopic, mqttQos, false, "0")
+		// 				token.Wait()
+		// 				state = message
+		// 			} else if message == "on" {
+		// 				token := mqttClient.Publish(mqttTopic, mqttQos, false, "1")
+		// 				token.Wait()
+		// 				state = message
+		// 			}
+		// 		}
+
+
 		// receive MQTT message
 		select {
 			case incoming := <-choke:
