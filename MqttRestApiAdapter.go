@@ -30,6 +30,8 @@ import (
 
 	var httpClient = http.Client{}
 
+	var opts = MQTT.NewClientOptions().AddBroker(mqttBrokerUrl)
+	var mqttClient = MQTT.NewClient(opts)
 
 
 type Gateway struct {
@@ -106,7 +108,7 @@ func subscribeMessage(topic string, message string){
 
 func main() {
 	// set MQTT client variable
-	opts := MQTT.NewClientOptions().AddBroker(mqttBrokerUrl)
+	opts = MQTT.NewClientOptions().AddBroker(mqttBrokerUrl)
 	opts.SetClientID(mqttClientId)
 
 	// subscribe to a topic
@@ -115,7 +117,7 @@ func main() {
 		choke <- [2]string{msg.Topic(), string(msg.Payload())}
 	})
 
-	mqttClient := MQTT.NewClient(opts)
+	mqttClient = MQTT.NewClient(opts)
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
@@ -137,6 +139,7 @@ func main() {
 		//receive REST API
 		message := useGETMethod()
 		checkMessage(message, mqttClient)
+
 		// receive MQTT message
 		select {
 			case incoming := <-choke:
@@ -150,45 +153,3 @@ func main() {
 	}
 
 }
-
-//pembeda mark
-
-//get
-		// req, err := http.NewRequest(restApiMethodGet, restApiUrlGet, nil)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// resp, err := httpClient.Do(req)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// body, err := ioutil.ReadAll(resp.Body)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// if 200 != resp.StatusCode {
-		// 	panic(body)
-		// }
-		// json.Unmarshal(body, &gateway)
-		// // resp.Body.Close()
-		// message := gateway.GatewayStatus
-
-//post
-				// call REST API
-				// req, err = http.NewRequest(restApiMethodPost, restApiUrlPost, strings.NewReader(restApiBody))
-				// if err != nil {
-				// 	panic(err)
-				// }
-				// resp, err = httpClient.Do(req)
-				// if err != nil {
-				// 	panic(err)
-				// }
-				// body, err = ioutil.ReadAll(resp.Body)
-				// if err != nil {
-				// 	panic(err)
-				// }
-				// if 200 != resp.StatusCode {
-				// 	panic(body)
-				// }
-				// fmt.Println(string(body))
-				// resp.Body.Close()
