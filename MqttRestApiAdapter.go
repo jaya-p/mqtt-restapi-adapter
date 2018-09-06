@@ -140,6 +140,7 @@ func main() {
 		message := useGETMethod()
 		checkMessage(message, mqttClient)
 
+
 		// receive MQTT message
 		select {
 			case incoming := <-choke:
@@ -153,3 +154,5 @@ func main() {
 	}
 
 }
+
+
